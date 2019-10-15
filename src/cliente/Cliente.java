@@ -1,4 +1,4 @@
-package caso2_infracomp;
+package cliente;
 
 public class Cliente 
 {
