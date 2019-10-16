@@ -49,12 +49,12 @@ public class Cliente
     /**
      * Llave secreta para cifrado simetrico
      */
-    private static SecretKey symmetricKey;
+    private SecretKey symmetricKey;
 
     /**
      * Arreglo dinamico con los algoritmos
      */
-    private static ArrayList<String> algos;
+    private ArrayList<String> algos;
 
 
     //---------------------
@@ -86,7 +86,7 @@ public class Cliente
      * Imprime el menu con la lista de
      * algoritmos de cifrado simetrico
      */
-    static void menuSimetrico() {
+    void menuSimetrico() {
         System.out.println("1. AES ");
         System.out.println("2. Blowfish (No disponible)");
     }
@@ -95,7 +95,7 @@ public class Cliente
      * Imprime el menu con la lista de
      * algoritmos de cifrado con hash
      */
-    static void menuHmac() {
+    void menuHmac() {
         System.out.println("1. HmacSHA1");
         System.out.println("2. HmacSHA256");
         System.out.println("3. HmacSHA384");
@@ -106,7 +106,7 @@ public class Cliente
      * Imprime el menu para escoger algoritmos
      * @param stdIn
      */
-    private static void chooseAlgos(BufferedReader stdIn)
+    private void chooseAlgos(BufferedReader stdIn)
     {
         System.out.println("Escoja uno de estos algoritmos simetricos: ");
         try
@@ -160,7 +160,7 @@ public class Cliente
      * @param fromServer el reto recibido en bytes
      * @return un boolean con la validacion
      */
-    public static boolean validateReto(String pReto, byte[] fromServer)
+    public boolean validateReto(String pReto, byte[] fromServer)
     {
         try
         {
@@ -189,7 +189,7 @@ public class Cliente
      * @param msg El mensaje que se va encriptar
      * @return el mensaje encriptado en bytes
      */
-    private static byte[] encryptS(byte[] msg)
+    private byte[] encryptS(byte[] msg)
     {
         byte[] bytes = null;
         try
@@ -210,7 +210,7 @@ public class Cliente
      * @param msg el mensaje que se va a descrifar
      * @return el mensaje descrifrado en bytes
      */
-    private static byte[] decryptS(byte[] msg)
+    private byte[] decryptS(byte[] msg)
     {
         byte[] bytes = null;
         try
@@ -232,13 +232,13 @@ public class Cliente
      * @param ks la llave publica
      * @return el mensaje descencriptado en bytes
      */
-    private static byte[] decryptA(byte[] msg, PublicKey ks)
+    private byte[] decryptA(byte[] msg, PublicKey ks)
     {
         byte[] bytes = null;
         try
         {
             Cipher cipher = Cipher.getInstance(RSA);
-            cipher.init(cipher.DECRYPT_MODE, ks);
+            cipher.init(Cipher.DECRYPT_MODE, ks);
             bytes = cipher.doFinal(msg);
         }
         catch (Exception e)
@@ -254,7 +254,7 @@ public class Cliente
      * @param ks la llave publica
      * @return El mensaje cifrado en bytes
      */
-    private static byte[] encryptA(byte[] msg, PublicKey ks)
+    private byte[] encryptA(byte[] msg, PublicKey ks)
     {
         byte[] bytes = null;
         try
@@ -275,7 +275,7 @@ public class Cliente
      * @param msg el mensaje que se va a cifrar
      * @return El mensaje cifrado en bytes
      */
-    private static byte[] encryptHmac(byte[] msg)
+    private byte[] encryptHmac(byte[] msg)
     {
         byte[] bytes = null;
         try
@@ -298,7 +298,7 @@ public class Cliente
      * @param msg la cadena que se va a transformar
      * @return la cadena transformada
      */
-    private static byte[] toBytesArray(String msg)
+    private byte[] toBytesArray(String msg)
     {
         String final_ = msg;
         while(final_.length() % 4 != 0) final_ += 0;
@@ -314,7 +314,7 @@ public class Cliente
      * @return un booleano que contiene la validacion
      * de estos dos arreglos
      */
-    private static boolean validateHmac(byte[] msg, byte[] hash)
+    private boolean validateHmac(byte[] msg, byte[] hash)
     {
         if(msg.length != hash.length)
         {
@@ -340,29 +340,32 @@ public class Cliente
      * @throws IOException Se lanza este error cuando hay
      * un error de entrada/salida.
      */
-    public static void procesar(BufferedReader stdIn, BufferedReader pIn, PrintWriter pOut) throws IOException
+    public void procesar(BufferedReader stdIn, BufferedReader pIn, PrintWriter pOut) throws IOException
     {
         // Se escogen los algoritmos
         chooseAlgos(stdIn);
         // se envia el primer mensaje
         String fromUser = HOLA;
         pOut.println(fromUser);
+        System.out.println("Se envio un " + HOLA);
 
         // Se recibe el primer mensaje del servidor
-        pIn.readLine();
+        System.out.println("Servidor dice: " + pIn.readLine());
 
         // Se envian los algoritmos
         fromUser = ALGORITMOS + ":" + algos.get(0) + ":" + RSA + ":" + algos.get(1);
-
+        
         pOut.println(fromUser);
+        System.out.println("En envian los algoritmos.");
 
         // Se debe recibir OK
-        pIn.readLine();
+        System.out.println("Servidor dice: " + pIn.readLine());
 
 
         // Recibe el certificado
         String cert = pIn.readLine();
-
+        System.out.println("Se recibio certificado");
+        
         try
         {
             // Convierte el certificado a una entrada por arreglo de bytes
@@ -390,6 +393,7 @@ public class Cliente
 
             // Recibe reto encriptado
             String fromServer = pIn.readLine();
+            System.out.println("Reto cifrado recibido");
             byte[] serverMsg = toBytesArray(fromServer);
 
             // Valida que el reto sea el mismo
@@ -399,23 +403,27 @@ public class Cliente
             if(validation)
             {
                 pOut.println(OK);
+                System.out.println("El reto es valido");
             }
             else
             {
                 pOut.println(ERROR);
+                System.out.println("El reto es invalido");
             }
 
             // Se ingresan los datos de cedula y clave
-            System.out.println("Ingrese su cédula: ");
+            System.out.println("Ingrese su cedula: ");
             // Cedula
             fromUser = stdIn.readLine();
-
+            
+            // Se cifra simetricamente la cedula y se envia
             userMsg = encryptS(toBytesArray(fromUser));
             pOut.println(DatatypeConverter.printBase64Binary(userMsg));
 
             // Clave
             System.out.println("Ingrese su clave: ");
             fromUser = stdIn.readLine();
+            // Se cifra simetricamente la clave y se envia
             userMsg = encryptS(toBytesArray(fromUser));
             pOut.println(DatatypeConverter.printBase64Binary(userMsg));
 
@@ -440,6 +448,7 @@ public class Cliente
             if(validation)
             {
                 pOut.println(OK);
+                System.out.println("El valor recibido es valido");
                 System.out.println("La comunicacion ha terminado exitosamente");
             }
             else
