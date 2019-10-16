@@ -13,6 +13,10 @@ import java.util.ArrayList;
 
 public class Cliente
 {
+    //---------------------
+    // Constantes
+    //---------------------
+
     /**
      * Servidor - Puerto
      */
@@ -38,18 +42,26 @@ public class Cliente
     public static final String HMACSHA384 = "HMACSHA384";
     public static final String HMACSHA512 = "HMACSHA512";
 
+    //-------------------
+    // Atributos
+    //-------------------
+
     /**
-     *
+     * Llave secreta para cifrado simetrico
      */
     private static SecretKey symmetricKey;
 
     /**
-     *
+     * Arreglo dinamico con los algoritmos
      */
     private static ArrayList<String> algos;
 
+
+    //---------------------
+    // Constructores
+    //---------------------
     /**
-     *
+     * Constructor
      */
     public Cliente()
     {
@@ -66,8 +78,13 @@ public class Cliente
         }
     }
 
+    //---------------------
+    // Metodos
+    //---------------------
+
     /**
-     *
+     * Imprime el menu con la lista de
+     * algoritmos de cifrado simetrico
      */
     static void menuSimetrico() {
         System.out.println("1. AES ");
@@ -75,7 +92,8 @@ public class Cliente
     }
 
     /**
-     *
+     * Imprime el menu con la lista de
+     * algoritmos de cifrado con hash
      */
     static void menuHmac() {
         System.out.println("1. HmacSHA1");
@@ -85,7 +103,7 @@ public class Cliente
     }
 
     /**
-     *
+     * Imprime el menu para escoger algoritmos
      * @param stdIn
      */
     private static void chooseAlgos(BufferedReader stdIn)
@@ -136,10 +154,11 @@ public class Cliente
     }
 
     /**
-     *
-     * @param pReto
-     * @param fromServer
-     * @return
+     * Valida que el reto que llego encriptado sea
+     * el mismo que se envio sin encriptacion
+     * @param pReto el reto enviado
+     * @param fromServer el reto recibido en bytes
+     * @return un boolean con la validacion
      */
     public static boolean validateReto(String pReto, byte[] fromServer)
     {
@@ -166,9 +185,9 @@ public class Cliente
     }
 
     /**
-     *
-     * @param msg
-     * @return
+     * Metodo que encripta simetricamente
+     * @param msg El mensaje que se va encriptar
+     * @return el mensaje encriptado en bytes
      */
     private static byte[] encryptS(byte[] msg)
     {
@@ -187,9 +206,9 @@ public class Cliente
     }
 
     /**
-     *
-     * @param msg
-     * @return
+     * Metodo que desencripta simetricamente
+     * @param msg el mensaje que se va a descrifar
+     * @return el mensaje descrifrado en bytes
      */
     private static byte[] decryptS(byte[] msg)
     {
@@ -207,6 +226,12 @@ public class Cliente
         return bytes;
     }
 
+    /**
+     * Metodo que descrifra asimentricamente
+     * @param msg El mensaje que se va a descifrar
+     * @param ks la llave publica
+     * @return el mensaje descencriptado en bytes
+     */
     private static byte[] decryptA(byte[] msg, PublicKey ks)
     {
         byte[] bytes = null;
@@ -224,10 +249,10 @@ public class Cliente
     }
 
     /**
-     *
-     * @param msg
-     * @param ks
-     * @return
+     * Metodo que encripta asimentricamente
+     * @param msg El mensaje que se va a cifrar
+     * @param ks la llave publica
+     * @return El mensaje cifrado en bytes
      */
     private static byte[] encryptA(byte[] msg, PublicKey ks)
     {
@@ -246,9 +271,9 @@ public class Cliente
     }
 
     /**
-     *
-     * @param msg
-     * @return
+     * Metodo que encripta con hash
+     * @param msg el mensaje que se va a cifrar
+     * @return El mensaje cifrado en bytes
      */
     private static byte[] encryptHmac(byte[] msg)
     {
@@ -267,9 +292,11 @@ public class Cliente
     }
 
     /**
-     *
-     * @param msg
-     * @return
+     * Metodo que transforma una cadena de caracteres
+     * en un arreglo de bytes validando que la longitud sea
+     * multiplo de 4
+     * @param msg la cadena que se va a transformar
+     * @return la cadena transformada
      */
     private static byte[] toBytesArray(String msg)
     {
@@ -280,10 +307,12 @@ public class Cliente
     }
 
     /**
-     *
-     * @param msg
-     * @param hash
-     * @return
+     * Metodo que valida que dos arreglos de bytes
+     * tengan el mismo cifrado de hash
+     * @param msg El primer mensaje a validar
+     * @param hash el segundo mensaje a validar
+     * @return un booleano que contiene la validacion
+     * de estos dos arreglos
      */
     private static boolean validateHmac(byte[] msg, byte[] hash)
     {
@@ -303,45 +332,49 @@ public class Cliente
     }
 
     /**
-     *
-     * @param stdIn
-     * @param pIn
-     * @param pOut
-     * @throws IOException
+     * Metodo que procesa todo el procedimiento
+     * de comunicacion con el servidor
+     * @param stdIn la entrada estandar del usuario
+     * @param pIn la entrada de los mensajes del servidor
+     * @param pOut la salida de los mensajes del servidor
+     * @throws IOException Se lanza este error cuando hay
+     * un error de entrada/salida.
      */
     public static void procesar(BufferedReader stdIn, BufferedReader pIn, PrintWriter pOut) throws IOException
     {
+        // Se escogen los algoritmos
         chooseAlgos(stdIn);
+        // se envia el primer mensaje
         String fromUser = HOLA;
         pOut.println(fromUser);
 
+        // Se recibe el primer mensaje del servidor
         pIn.readLine();
 
-        // Send Algorithms
+        // Se envian los algoritmos
         fromUser = ALGORITMOS + ":" + algos.get(0) + ":" + RSA + ":" + algos.get(1);
 
         pOut.println(fromUser);
 
-        // Must receive OK
-        String fromServer = pIn.readLine();
+        // Se debe recibir OK
+        pIn.readLine();
 
-        System.out.println(fromServer);
 
-        // Receives certificate
+        // Recibe el certificado
         String cert = pIn.readLine();
 
         try
         {
-            // Converts Cert to byte Array
+            // Convierte el certificado a una entrada por arreglo de bytes
             InputStream is = new ByteArrayInputStream(DatatypeConverter.parseBase64Binary(cert));
-            // Creates the certificate factory
+            // Crea una fabrica de certificados
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             X509Certificate certificate = (X509Certificate) cf.generateCertificate(is);
 
-            // Gets public key from server
+            // Obtiene la llave publica del servidor
             PublicKey ks = certificate.getPublicKey();
 
-            // Ciphers the symmetric Key with RSA
+            // Cifrar la llave simetrica
             byte[] userMsg = encryptA(symmetricKey.getEncoded(), ks);
 
             // Sends the symmetric Key
@@ -349,20 +382,20 @@ public class Cliente
             pOut.println(fromUser);
 
             // Envía reto
-            System.out.println("Ingrese un mensaje:");
+            System.out.println("Ingrese un mensaje sin espacios:");
             fromUser = stdIn.readLine();
             userMsg = toBytesArray(fromUser);
             pOut.println(DatatypeConverter.printBase64Binary(userMsg));
             String reto = fromUser;
 
             // Recibe reto encriptado
-            fromServer = pIn.readLine();
+            String fromServer = pIn.readLine();
             byte[] serverMsg = toBytesArray(fromServer);
 
             // Valida que el reto sea el mismo
             boolean validation = validateReto(reto, serverMsg);
 
-            // Envia respuesta
+            // Envia respuesta dependiendo de la validacion
             if(validation)
             {
                 pOut.println(OK);
@@ -372,34 +405,47 @@ public class Cliente
                 pOut.println(ERROR);
             }
 
+            // Se ingresan los datos de cedula y clave
             System.out.println("Ingrese su cédula: ");
+            // Cedula
             fromUser = stdIn.readLine();
 
             userMsg = encryptS(toBytesArray(fromUser));
             pOut.println(DatatypeConverter.printBase64Binary(userMsg));
 
+            // Clave
             System.out.println("Ingrese su clave: ");
             fromUser = stdIn.readLine();
             userMsg = encryptS(toBytesArray(fromUser));
             pOut.println(DatatypeConverter.printBase64Binary(userMsg));
 
+            // Se recibe el valor encriptado simetricamente
             fromServer = pIn.readLine();
             serverMsg = toBytesArray(fromServer);
+            // Se desencripta simetricamente
             serverMsg = decryptS(serverMsg);
+            // Se encripta con hash
             byte[] msg = encryptHmac(serverMsg);
 
+            // Se recibe el valor encriptado asimetricamente y con hash
             fromServer = pIn.readLine();
             serverMsg = toBytesArray(fromServer);
+            // Se desencripta asimetricamente
             byte[] hash = decryptA(serverMsg, ks);
 
+            // Se validan los dos valores con su respectivo hash
             validation = validateHmac(msg, hash);
+
+            // Se envia la respuesta dependiendo de la validacion
             if(validation)
             {
                 pOut.println(OK);
+                System.out.println("La comunicacion ha terminado exitosamente");
             }
             else
             {
                 pOut.println(ERROR);
+                System.out.println("Hubo un error. Fallo con exito");
             }
         }
         catch(Exception e)
