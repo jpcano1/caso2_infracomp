@@ -47,7 +47,11 @@ public class D extends Thread {
     }
 
     private boolean validoAlgHMAC(String nombre) {
-        return nombre.equals("HMACMD5") || nombre.equals("HMACSHA1") || nombre.equals("HMACSHA256") || nombre.equals("HMACSHA384") || nombre.equals("HMACSHA512");
+        return nombre.equals("HMACMD5") ||
+                nombre.equals("HMACSHA1") ||
+                nombre.equals("HMACSHA256") ||
+                nombre.equals("HMACSHA384") ||
+                nombre.equals("HMACSHA512");
     }
 
     public void run() {

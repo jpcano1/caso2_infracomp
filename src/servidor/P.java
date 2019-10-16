@@ -9,8 +9,6 @@ import java.security.KeyPair;
 import java.security.Security;
 import java.security.cert.X509Certificate;
 
-import icsrv20192.D;
-import icsrv20192.S;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class P {
@@ -26,22 +24,23 @@ public class P {
         System.out.println("MAESTRO: Establezca puerto de conexion:");
         InputStreamReader isr = new InputStreamReader(System.in);
         BufferedReader br = new BufferedReader(isr);
-        int ip = Integer.parseInt(br.readLine());
+//        int ip = Integer.parseInt(br.readLine());
+        int ip = 5555;
         System.out.println("MAESTRO: Empezando servidor maestro en puerto " + ip);
         Security.addProvider(new BouncyCastleProvider());
         int idThread = 0;
         ss = new ServerSocket(ip);
         System.out.println("MAESTRO: Socket creado.");
-        keyPairServidor = icsrv20192.S.grsa();
+        keyPairServidor = S.grsa();
         certSer = S.gc(keyPairServidor);
-        icsrv20192.D.initCertificate(certSer, keyPairServidor);
+        D.initCertificate(certSer, keyPairServidor);
 
         while(true) {
             while(true) {
                 try {
                     Socket sc = ss.accept();
                     System.out.println("MAESTRO: Cliente " + idThread + " aceptado.");
-                    icsrv20192.D d = new D(sc, idThread);
+                    D d = new D(sc, idThread);
                     ++idThread;
                     d.start();
                 } catch (IOException var7) {
